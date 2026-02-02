@@ -1,4 +1,5 @@
 from pathlib import Path
+import argparse
 
 def searchFiles(directory, extension):
 
@@ -24,21 +25,24 @@ def searchFiles(directory, extension):
 def readFiles(fileList):
     for file in fileList:
         try:
-            contenido = file.read_text(encoding='utf-8')
-            print(f"Contents of {file}:\n{contenido}\n")
+            with open(file, "r") as f:
+                for num_linea, linea in enumerate(f, start=1):
+                    if "API_KEY" in linea:
+                        print(f"Encontrado en línea {num_linea}: {linea.strip()}")
+            
         except Exception as e:
             print(f"Could not read file {file} due to error: {e}")
     
 
 if __name__ == "__main__":
-    directory = input("Where to search for files? Press Enter to use default './src' directory.")
-    file = input("Enter the file extension to search for (e.g., .py) Press enter to use default '*': ")
-    if not directory:
-        directory = './src'
-    if not file:
-        file = '*'
+    parser = argparse.ArgumentParser(description="Search for files with a specific extension in a directory.")
+
+    parser.add_argument("-d", "--dir" , help="Directory to search files in", default="./src")
+    parser.add_argument("-f", "--file", help="file extension to search for", default="*")
     
-    found_files = searchFiles(directory, file)
+    args = parser.parse_args()
+    
+    found_files = searchFiles(args.dir, args.file)
     text = readFiles(found_files)
     print(f"Analyzing... {found_files}")
     print(text)
