@@ -3,7 +3,8 @@ from pathlib import Path
 def searchFiles(directory, extension):
 
     path = Path(directory)
-    blacklist = {'.git', '__pycache__', '.png', '.jpg'}
+    black_dir = {'.git', '__pycache__', '.venv'}
+    black_ext = {'.png', '.jpg'}
 
     files = []
 
@@ -12,7 +13,9 @@ def searchFiles(directory, extension):
         return
     
     for file in path.rglob(f'*{extension}'):
-        if file.suffix in blacklist:
+        if any(part in black_dir for part in file.parts):
+            continue
+        if file.suffix in black_ext :
             continue
         files.append(file)
     
@@ -34,5 +37,8 @@ if __name__ == "__main__":
         directory = './src'
     if not file:
         file = '*'
-        
-    readFiles(searchFiles(directory, file))
+    
+    found_files = searchFiles(directory, file)
+    text = readFiles(found_files)
+    print(f"Analyzing... {found_files}")
+    print(text)
