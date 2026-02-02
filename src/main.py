@@ -1,6 +1,8 @@
 from pathlib import Path
 import argparse
 import logging
+import re
+from Patterns import PATTERNS
 
 def searchFiles(directory, extension):
 
@@ -32,8 +34,10 @@ def readFiles(fileList):
 
             with open(file, "r", encoding="utf-8", errors="ignore") as f:
                 for num_linea, linea in enumerate(f, start=1):
-                    if "API_KEY(regex)" in linea:
-                        logging.info(f"Founded on line: {num_linea}: {linea.strip()}")
+                    for key, pattern in re.compile(PATTERNS.items()):
+                        if re.search(pattern, linea):
+                            logging.info(f"Founded {key} on line: {num_linea}: {linea.strip()}")
+                        
             
         except Exception as e:
             logging.error(f"Could not read file {file} due to error: {e}")
