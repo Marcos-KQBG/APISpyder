@@ -1,5 +1,6 @@
 from pathlib import Path
 import argparse
+import logging
 
 def searchFiles(directory, extension):
 
@@ -10,8 +11,8 @@ def searchFiles(directory, extension):
     files = []
 
     if not path.exists() or not path.is_dir():
-        print(f"The directory {directory} does not exist or is not a directory.")
-        return
+        logging.error(f"The directory {directory} does not exist or is not a directory.")
+        return []
     
     for file in path.rglob(f'*{extension}'):
         if any(part in black_dir for part in file.parts):
@@ -26,16 +27,16 @@ def readFiles(fileList):
     for file in fileList:
         try:
             if esBinario(file):
-                print(f"Skipping binary file: {file}")
+                logging.info(f"Skipping binary file: {file}")
                 continue
 
-            with open(file, "r") as f:
+            with open(file, "r", encoding="utf-8", errors="ignore") as f:
                 for num_linea, linea in enumerate(f, start=1):
                     if "API_KEY(regex)" in linea:
-                        print(f"Founded on line: {num_linea}: {linea.strip()}")
+                        logging.info(f"Founded on line: {num_linea}: {linea.strip()}")
             
         except Exception as e:
-            print(f"Could not read file {file} due to error: {e}")
+            logging.error(f"Could not read file {file} due to error: {e}")
     
 
 def esBinario(filePath):
@@ -45,18 +46,19 @@ def esBinario(filePath):
             if b'\x00' in chunk:
                 return True
     except Exception as e:
-        print(f"Could not read file {filePath} due to error: {e}")
+        logging.error(f"Could not read file {filePath} due to error: {e}")
     return False
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Search for files with a specific extension in a directory.")
 
     parser.add_argument("-d", "--dir" , help="Directory to search files in", default="./src")
-    parser.add_argument("-f", "--file", help="file extension to search for", default="*")
+    parser.add_argument("-f", "--file", help="file extension to search for", default="")
     
     args = parser.parse_args()
     
     found_files = searchFiles(args.dir, args.file)
     text = readFiles(found_files)
-    print(f"Analyzing... {found_files}")
-    print(text)
+    logging.info(f"Analyzing... {found_files}")
+    logging.info(text)
+    
