@@ -4,10 +4,14 @@ import logging
 import re
 from Patterns import PATTERNS
 
+COMPILED_PATTERNS = {
+    key: re.compile(pattern) for key, pattern in PATTERNS.items()
+}
+
 def searchFiles(directory, extension):
 
     path = Path(directory)
-    black_dir = {'.git', '__pycache__', '.venv'}
+    black_dir = {'.git', '__pycache__', '.venv', 'node_modules', 'dist', 'build'}
     black_ext = {'.png', '.jpg'}
 
     files = []
@@ -34,11 +38,14 @@ def readFiles(fileList):
 
             with open(file, "r", encoding="utf-8", errors="ignore") as f:
                 for num_linea, linea in enumerate(f, start=1):
-                    for key, pattern in re.compile(PATTERNS.items()):
-                        if re.search(pattern, linea):
-                            logging.info(f"Founded {key} on line: {num_linea}: {linea.strip()}")
+                    try:
+                        for key, pattern in COMPILED_PATTERNS.items():
+                            if pattern.search(linea):
+                                logging.info(f"Founded {key} on line: {num_linea}: {linea.strip()} in file: {file}")
                         
-            
+                    except re.error as regex_error:
+                        logging.error(f"Regex error for pattern {pattern}: {regex_error}")
+ 
         except Exception as e:
             logging.error(f"Could not read file {file} due to error: {e}")
     
@@ -54,6 +61,7 @@ def esBinario(filePath):
     return False
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     parser = argparse.ArgumentParser(description="Search for files with a specific extension in a directory.")
 
     parser.add_argument("-d", "--dir" , help="Directory to search files in", default="./src")
@@ -62,7 +70,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     found_files = searchFiles(args.dir, args.file)
-    text = readFiles(found_files)
+
     logging.info(f"Analyzing... {found_files}")
-    logging.info(text)
+    readFiles(found_files)
     
